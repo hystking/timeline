@@ -1,5 +1,5 @@
 {
-  "name": "front-lib-template",
+  "name": "timeline",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,6 @@
     "coffeeify": "latest"
   },
   "scripts": {
-    "build": "coffee -c index.coffee",
     "test": "coffee test.coffee -b -l firefox"
   },
   "author": "",
