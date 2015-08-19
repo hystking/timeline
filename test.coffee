@@ -1,8 +1,6 @@
 test = require "prova"
-NiceModule = require "./index.coffee"
+Timeline = require "./index"
 
-niceModule = new NiceModule arg: "nice"
-
-test "is nice", (t) ->
+test "runs correctly", (t) ->
   t.plan 1
-  t.equal niceModule.arg, "nice"
+  t.ok true
