@@ -4,12 +4,10 @@
   "description": "",
   "main": "index.js",
   "devDependencies": {
-    "prova": "latest",
-    "coffee-script": "latest",
-    "coffeeify": "latest"
+    "prova": "latest"
   },
   "scripts": {
-    "test": "coffee test.coffee -b -l firefox"
+    "test": "node --harmony --harmony_default_parameters test.js"
   },
   "author": "",
   "license": "ISC"
