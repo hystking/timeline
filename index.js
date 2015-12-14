@@ -10,35 +10,35 @@
 
 class Timeline {
   constructor() {
-    this.rangeEvents = [];
+    this.events = [];
     this.fromSpikes = [];
     this.reset();
   }
 
   reset() {
-    this.lastRangeEventsIndex = 0;
+    this.lastEventsIndex = 0;
     this.lastFromSpikesIndex = 0;
   }
 
   addEvent(callback, from, to = from) {
-    this.rangeEvents.push({
+    this.events.push({
       from: from,
       to: to,
       callback: callback,
     });
-    this.rangeEvents.sort((a, b) => a.from - b.from);
-    this.rangeEvents.sort((a, b) => a.to - b.to);
-    this.lastRangeEventsIndex = 0;
+    this.events.sort((a, b) => a.from - b.from);
+    this.events.sort((a, b) => a.to - b.to);
+    this.lastEventsIndex = 0;
     this.lastFromSpikesIndex = 0;
 
     this.fromSpikes = [];
 
-    const rangeEventsLength = this.rangeEvents.length;
-    for(let i=0; i<rangeEventsLength-1; i++){
-      const iFrom = this.rangeEvents[i].from;
+    const eventsLength = this.events.length;
+    for(let i=0; i<eventsLength-1; i++){
+      const iFrom = this.events[i].from;
       let broken = false;
-      for(let j=i+1; j<rangeEventsLength; j++){
-        if(this.rangeEvents[j].from < iFrom){
+      for(let j=i+1; j<eventsLength; j++){
+        if(this.events[j].from < iFrom){
           broken = true;
           break;
         }
@@ -51,31 +51,31 @@ class Timeline {
 
   exec(time) {
     // 頭良くなった
-    const eventsLength = this.rangeEvents.length;
+    const eventsLength = this.events.length;
     const fromSpikesLength = this.fromSpikes.length;
 
     let lastIndex = eventsLength;
 
     for(let i=this.lastFromSpikesIndex; i<fromSpikesLength; i++){
-      if(this.rangeEvents[this.fromSpikes[i]].from > time){
+      if(this.events[this.fromSpikes[i]].from > time){
         lastIndex = this.fromSpikes[i];
         this.lastFromSpikesIndex = i;
         break;
       }
     }
 
-    for(let i=this.lastRangeEventsIndex; i<lastIndex; i++){
-      const rangeEvent = this.rangeEvents[i];
-      if(rangeEvent.from > time) {
+    for(let i=this.lastEventsIndex; i<lastIndex; i++){
+      const event = this.events[i];
+      if(event.from > time) {
         continue;
       }
-      if(rangeEvent.to > time) {
-        const range = rangeEvent.to - rangeEvent.from;
-        const t = range <= 0 ? 1 : (time - rangeEvent.from) / range;
-        rangeEvent.callback(time, t);
+      if(event.to > time) {
+        const range = event.to - event.from;
+        const t = range <= 0 ? 1 : (time - event.from) / range;
+        event.callback(time, t);
       } else {
-        rangeEvent.callback(rangeEvent.to, 1);
-        this.lastRangeEventsIndex = i + 1;
+        event.callback(event.to, 1);
+        this.lastEventsIndex = i + 1;
       }
     }
 
