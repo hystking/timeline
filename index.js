@@ -1,94 +1,85 @@
-var Timeline = function(){
+// 決まった時間にイベントを呼び出すクラス
+//
+// timeline = new Timeline();
+//
+// イベントの登録
+// timeline.addEvent(callback, 開始時間, 終了時間 = 開始時間);
+//
+// 実行のチェック（updateとかで毎回呼びだす）
+// timeline.exec(時間);
+
+class Timeline {
+  constructor() {
     this.rangeEvents = [];
     this.fromSpikes = [];
-};
+    this.reset();
+  }
 
-Timeline.prototype.reset = function(startTime){
+  reset() {
     this.lastRangeEventsIndex = 0;
     this.lastFromSpikesIndex = 0;
-};
+  }
 
-Timeline.prototype.prepare = function(){
-    this.rangeEvents.sort(function(a, b){return a.from - b.from;});
-    this.rangeEvents.sort(function(a, b){return a.to - b.to;});
-    
+  addEvent(callback, from, to = from) {
+    this.rangeEvents.push({
+      from: from,
+      to: to,
+      callback: callback,
+    });
+    this.rangeEvents.sort((a, b) => a.from - b.from);
+    this.rangeEvents.sort((a, b) => a.to - b.to);
+    this.lastRangeEventsIndex = 0;
+    this.lastFromSpikesIndex = 0;
+
     this.fromSpikes = [];
 
-    var rangeEventsLength = this.rangeEvents.length;
-    var i, j;
-    var iFrom, broken, jFrom;
-    
-    for(i=0; i<rangeEventsLength-1; i=i+1|0){
-        iFrom = this.rangeEvents[i].from;
-        broken = false;
-        for(j=i+1|0; j<rangeEventsLength; j=j+1|0){
-            jFrom = this.rangeEvents[j].from;
-            if(jFrom < iFrom){
-                broken = true;
-                break;
-            }
+    const rangeEventsLength = this.rangeEvents.length;
+    for(let i=0; i<rangeEventsLength-1; i++){
+      const iFrom = this.rangeEvents[i].from;
+      let broken = false;
+      for(let j=i+1; j<rangeEventsLength; j++){
+        if(this.rangeEvents[j].from < iFrom){
+          broken = true;
+          break;
         }
-        if(!broken){
-            this.fromSpikes.push(i);
-        }
+      }
+      if(!broken){
+        this.fromSpikes.push(i);
+      }
     }
-    
-    this.reset();
-    this.isReady = true;
-};
+  }
 
-Timeline.prototype.add = function(from, to, callback){
-    if(callback === void 0) {
-      callback = to;
-      to = from;
-    }
+  exec(time) {
+    // 頭良くなった
+    const eventsLength = this.rangeEvents.length;
+    const fromSpikesLength = this.fromSpikes.length;
 
-    this.rangeEvents.push({
-        from: from,
-        to: to,
-        callback: callback,
-    });
-    
-    this.isReady = false;
-};
+    let lastIndex = eventsLength;
 
-Timeline.prototype.exec = function(time){
-    if(!this.isReady){
-      throw "call prepare before exec";
+    for(let i=this.lastFromSpikesIndex; i<fromSpikesLength; i++){
+      if(this.rangeEvents[this.fromSpikes[i]].from > time){
+        lastIndex = this.fromSpikes[i];
+        this.lastFromSpikesIndex = i;
+        break;
+      }
     }
 
-    var eventsLength = this.rangeEvents.length;
-    var fromSpikesLength = this.fromSpikes.length;
-    var lastIndex = eventsLength;
-
-    var i;
-    for(i=this.lastFromSpikesIndex; i<fromSpikesLength; i=i+1|0){
-        if(this.rangeEvents[this.fromSpikes[i]].from > time){
-            lastIndex = this.fromSpikes[i];
-            this.lastFromSpikesIndex = i;
-            break;
-        }
+    for(let i=this.lastRangeEventsIndex; i<lastIndex; i++){
+      const rangeEvent = this.rangeEvents[i];
+      if(rangeEvent.from > time) {
+        continue;
+      }
+      if(rangeEvent.to > time) {
+        const range = rangeEvent.to - rangeEvent.from;
+        const t = range <= 0 ? 1 : (time - rangeEvent.from) / range;
+        rangeEvent.callback(time, t);
+      } else {
+        rangeEvent.callback(rangeEvent.to, 1);
+        this.lastRangeEventsIndex = i + 1;
+      }
     }
 
-    var t, range, rangeEvent;
-    for(i=this.lastRangeEventsIndex; i<lastIndex; i=i+1|0){
-        var rangeEvent = this.rangeEvents[i];
-        if(rangeEvent.from > time) {
-            continue;
-        }
-        if(rangeEvent.to > time) {
-            range = rangeEvent.to - rangeEvent.from;
-            if(range <= 0) {
-                t = 1;
-            } else {
-                t = (time - rangeEvent.from) / range;
-            }
-            rangeEvent.callback(time, t);
-        } else {
-            rangeEvent.callback(rangeEvent.to, 1);
-            this.lastRangeEventsIndex = i + 1;
-        }
-    }
-};
+  }
+}
 
 module.exports = Timeline;
